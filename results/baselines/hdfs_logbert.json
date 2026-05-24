@@ -1,0 +1,11 @@
+{
+  "model": "logbert",
+  "dataset": "hdfs",
+  "source": "measured",
+  "f1": 0.82,
+  "latency_p50_ms": 16.26733450007123,
+  "latency_p95_ms": 19.48130740011038,
+  "latency_p99_ms": 21.882850959696057,
+  "cost_per_1k_logs": 0.0,
+  "model_params": 110000000
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "model": "deeplog",
+    "dataset": "hdfs",
+    "source": "literature",
+    "f1": 0.933,
+    "precision": null,
+    "recall": null,
+    "latency_p95_ms": null,
+    "cost_per_1k_logs": 0.0,
+    "model_params": 1000000,
+    "citation": "Du et al. 2017"
+  },
+  {
+    "model": "loganomaly",
+    "dataset": "hdfs",
+    "source": "literature",
+    "f1": 0.958,
+    "precision": null,
+    "recall": null,
+    "latency_p95_ms": 10.0,
+    "cost_per_1k_logs": 0.0,
+    "model_params": 1000000,
+    "citation": "Meng et al. 2019"
+  },
+  {
+    "model": "logbert",
+    "dataset": "hdfs",
+    "source": "literature",
+    "f1": 0.82,
+    "precision": null,
+    "recall": null,
+    "latency_p95_ms": null,
+    "cost_per_1k_logs": 0.0,
+    "model_params": 110000000,
+    "citation": "Guo et al. 2021 arXiv:2103.04475"
+  },
+  {
+    "model": "logllm",
+    "dataset": "hdfs",
+    "source": "literature",
+    "f1": 0.99,
+    "precision": null,
+    "recall": null,
+    "latency_p95_ms": 2000.0,
+    "cost_per_1k_logs": 0.02,
+    "model_params": 8000000000,
+    "citation": "Li et al. 2025 arXiv:2411.08561"
+  },
+  {
+    "model": "gpt4",
+    "dataset": "hdfs",
+    "source": "literature",
+    "f1": 0.94,
+    "precision": null,
+    "recall": null,
+    "latency_p95_ms": 3000.0,
+    "cost_per_1k_logs": 0.03,
+    "model_params": 1000000000000,
+    "citation": "Patel 2026 arXiv:2604.12218"
+  }
+]
