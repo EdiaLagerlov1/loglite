@@ -4,18 +4,17 @@
 ---
 
 
-## M1 — Environment & Data Setup (4h) ✓ DONE (local)
+## M1 — Environment & Data Setup (4h) ✓ DONE
 
 - [x] Create directory structure (`src/`, `tests/`, `docs/`, `results/`, `data/`, `config/`, `scripts/`)
-- [x] Set up Google Colab notebook with GPU (T4) — **do on Colab**
+- [x] Create GitHub repo and push — https://github.com/EdiaLagerlov1/loglite
+- [x] Set up Google Colab notebook with GPU (T4)
 - [x] Install dependencies: `torch`, `transformers`, `datasets`, `pytest`, `ruff`, `scikit-learn`, `anthropic`, `python-dotenv`
-- [x] Download HDFS v1 + BGL from loghub; verify HDFS loads without errors — **do on Colab (large files)**
+- [x] Download HDFS v1 + BGL from loghub; verify both load without errors
 - [x] Create `requirements.txt`, `.env.example`, `README.md` stub
 - [x] Create `config/settings.py` with all constants (RANDOM_SEED=42, MODEL_NAME, MODEL_REVISION, WINDOW_SIZE, BGL label rule, H3 p50 note)
 
-**Done when:** repo on GitHub, HDFS loads on Colab, `python scripts/check_setup.py` prints PASSED.
-
-> Local check: `python scripts/check_setup.py` → **PASSED** (all imports OK, GPU=False expected on Mac)
+> Local check: `python scripts/check_setup.py` → **PASSED**
 
 ---
 
