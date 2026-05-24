@@ -16,7 +16,11 @@ def build_comparison_table(results_dir: str = "results") -> pd.DataFrame:
         if path.name in ("agent_eval.json",):
             continue
         try:
-            rows.append(json.loads(path.read_text()))
+            data = json.loads(path.read_text())
+            if isinstance(data, list):
+                rows.extend(data)   # literature.json is a list of dicts
+            else:
+                rows.append(data)
         except (json.JSONDecodeError, KeyError):
             continue
     df = pd.DataFrame(rows)
