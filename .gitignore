@@ -1,0 +1,32 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Data (large files — download via loghub)
+data/HDFS/
+data/BGL/
+
+# Model checkpoints (saved to Google Drive)
+results/loglite-mlm/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage
+.coverage
+htmlcov/
