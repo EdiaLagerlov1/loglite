@@ -39,6 +39,7 @@ BGL_PATH               = "data/BGL/"
 HDFS_LABEL_FILE        = "data/HDFS/anomaly_label.csv"   # loghub annotation file
 BGL_LABEL_FILE         = "data/BGL/BGL.log"              # labels embedded in col 0
 HDFS_TRAIN_SESSIONS    = 4_855   # first N block IDs → train (chronological)
+HDFS_TEST_SESSIONS     = 2_000   # sample this many for test evaluation (avoids timeout)
 BGL_TRAIN_LINES        = 4_000_000
 
 # ── Streaming simulator ───────────────────────────────────────────────────────
