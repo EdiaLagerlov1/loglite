@@ -112,6 +112,56 @@ def compute_anomaly_score(
     return outputs.loss.item()
 
 
+def compute_anomaly_scores_batch(
+    model: BertForMaskedLM,
+    tokenizer: BertTokenizer,
+    sequences: list[str],
+    batch_size: int = 32,
+    mlm_prob: float = MLM_PROB,
+) -> list[float]:
+    """
+    Batched version of compute_anomaly_score — same deterministic masking,
+    runs batch_size sequences per forward pass for ~10x speedup on GPU.
+    Empty/whitespace sequences get score 0.0.
+    """
+    scores: list[float] = []
+    for i in range(0, len(sequences), batch_size):
+        batch = sequences[i: i + batch_size]
+        valid = [s if (s and s.strip()) else " " for s in batch]
+        empty_mask = [not (s and s.strip()) for s in batch]
+
+        inputs = tokenizer(
+            valid,
+            return_tensors="pt",
+            max_length=MAX_LENGTH,
+            padding="max_length",
+            truncation=True,
+        )
+        if torch.cuda.is_available():
+            inputs = {k: v.cuda() for k, v in inputs.items()}
+
+        torch.manual_seed(RANDOM_SEED)
+        masked_ids, labels = mask_tokens(inputs["input_ids"].clone(), tokenizer, mlm_prob)
+        inputs["input_ids"] = masked_ids
+        if torch.cuda.is_available():
+            labels = labels.cuda()
+
+        with torch.no_grad():
+            logits = model(**inputs).logits   # [B, MAX_LENGTH, vocab]
+
+        # Per-sequence mean CE loss over masked positions
+        B = logits.size(0)
+        for j in range(B):
+            if empty_mask[j]:
+                scores.append(0.0)
+            else:
+                loss = F.cross_entropy(
+                    logits[j], labels[j], reduction="mean", ignore_index=-100
+                )
+                scores.append(loss.item())
+    return scores
+
+
 def compute_per_token_losses(
     model: BertForMaskedLM,
     tokenizer: BertTokenizer,
