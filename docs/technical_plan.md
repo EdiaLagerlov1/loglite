@@ -1040,4 +1040,107 @@ if __name__ == "__main__":
 
 ---
 
+---
+
+## 12. Limitations and Future Work
+
+### Current Limitations
+
+**Input representation:** LogLite is trained and evaluated on pre-parsed event sequences (E1–E29) extracted by the loghub team using the Drain log parser. In production, this parsing step must be performed before inference, adding ~0.4ms latency per 20-line window.
+
+**Fixed template set:** The Drain parser used to generate event IDs was run offline on historical logs. If new log patterns appear in production (e.g. a new software version introduces new message formats), they will not match any known template and will be assigned an `[UNK]` token. The model's behavior on unknown patterns is undefined until the next retrain cycle.
+
+**Small training set:** Only 4,855 HDFS sessions are used for fine-tuning. This is sufficient for event sequences (only 29 unique tokens) but would be inadequate for raw log text, which requires much larger datasets to generalize.
+
+**Evaluation sample:** Due to Colab GPU time limits, the test set evaluation uses a stratified sample of 2,000 sessions (1,000 anomalous + 1,000 normal) rather than the full ~570,000 test sessions. Results may vary slightly on the full test set.
+
+---
+
+### Future Work
+
+#### LLM-Assisted Template Drift Handling
+
+The most significant production gap is handling **template drift** — new log patterns that appear after the Drain parser was trained. The proposed solution uses an LLM as a real-time classifier for unknown log lines:
+
+```
+Raw log line arrives at inference time
+         ↓
+Drain parser (locked template set)
+         ↓ known pattern          ↓ unknown pattern
+    Event ID (E5)              LLM classifier (Claude Haiku)
+         ↓                              ↓
+    BERT scoring               MATCH existing template → Event ID → BERT
+                               NEW_PATTERN → tentative ID, flag for review
+                               ANOMALY → alert immediately, skip BERT
+```
+
+**Production architecture:**
+```
+Raw line → Drain (known?)
+              ↓ yes → Event ID → BERT scoring → anomaly score
+              ↓ no  → Claude Haiku → MATCH / NEW_PATTERN / ANOMALY
+                           ↓ ANOMALY → Claude Sonnet → plain-English explanation
+```
+
+**Why this works:**
+- LLM understands log semantics — knows "Connection timeout after 45s" is similar to "Connection timeout after 30s" even if they have different numeric values
+- Only called for unknown patterns (~1–5% of lines in a stable system) — cost is low
+- Uses cheap model (Haiku ~$0.001/1K tokens) for classification; expensive model (Sonnet) only for confirmed anomalies requiring explanation
+- No retraining needed when new patterns appear — the LLM handles them immediately
+
+**Cost estimate:** At 1% unknown pattern rate and 1,000 lines/sec → 10 LLM calls/sec → ~$0.036/hr additional cost. Negligible compared to the GPU inference cost.
+
+**Implementation scope:** Not implemented in this project due to time constraints. Estimated 2–3 days additional engineering work. The explanation agent (M5) already uses the same Claude API infrastructure, so the plumbing is in place.
+
+#### User-Aware Anomaly Detection
+
+For systems with millions of mixed-user logs (no session grouping), a per-user baseline approach would be more effective than a global threshold.
+
+**The problem with global models:**
+When logs from many users are mixed together, a single BERT model learns the average normal behavior across all users. A power user who routinely triggers E26 will always look anomalous to a model trained on average behavior — even though E26 is normal *for that user*.
+
+**Proposed architecture:**
+
+```
+Raw log line: "2026-05-27 14:32 user_123 E5 E11 E9 E26"
+         ↓
+Prepend user token: "[USER_123] E5 E11 E9 E26"
+         ↓
+BERT MLM fine-tuning — learns per-user normal patterns
+         ↓
+Anomaly score = deviation from THIS user's learned baseline
+         ↓
+Alert only if score > user-specific threshold
+```
+
+**Implementation:**
+```python
+# Add all user IDs as special tokens before fine-tuning
+user_tokens = [f"[USER_{uid}]" for uid in all_user_ids]
+tokenizer.add_special_tokens({"additional_special_tokens": user_tokens})
+model.resize_token_embeddings(len(tokenizer))
+
+# Each training sequence prefixed with user token
+sequence = f"[USER_{user_id}] " + " ".join(event_ids)
+```
+
+**Benefits:**
+- No separate model per user — one BERT handles all users
+- Per-user threshold tuning using that user's own history
+- Naturally handles power users, admins, service accounts
+- Detects anomalies relative to the user's own baseline — not the population mean
+
+**Suitable datasets:** CERT Insider Threat Dataset (explicit user IDs + actions), LANL Unified Host and Network Dataset (user login events across enterprise network)
+
+**Limitation:** Requires enough per-user history to learn a baseline (~100+ sessions per user). New users with sparse history fall back to the global threshold until enough data is collected.
+
+#### Model Efficiency
+
+For lower-latency or lower-cost deployments:
+- **DistilBERT** (66M params, 2× faster, ~97% of BERT accuracy) — drop-in replacement
+- **INT8 quantization** (`torch.quantization.quantize_dynamic`) — 4× smaller, 2× faster, minimal accuracy loss
+- **4-layer BERT** trained from scratch on event sequences — sufficient for the 29-token vocabulary, much faster than 12-layer base
+
+---
+
 *Technical Plan v2.3 — LogLite Project, May 2026*
