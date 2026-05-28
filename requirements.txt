@@ -1,18 +1,19 @@
 # LogLite dependencies
-# Python 3.11
+# Python 3.11 / 3.12 (Colab)
 
-# ML
+# ML — pinned for Colab T4 compatibility
 torch>=2.0.0
-transformers>=4.40.0
-datasets>=2.19.0
+transformers==4.41.2
+datasets==2.19.0
 scikit-learn>=1.4.0
+numpy==1.26.4
+accelerate==0.30.0
 
 # Claude agent
 anthropic>=0.30.0
 
 # Utilities
 python-dotenv>=1.0.0
-numpy>=1.26.0
 pandas>=2.2.0
 matplotlib>=3.8.0
 
