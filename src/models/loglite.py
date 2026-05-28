@@ -109,7 +109,8 @@ def compute_anomaly_score(
     with torch.no_grad():
         outputs = model(**inputs, labels=labels)
 
-    return outputs.loss.item()
+    val = outputs.loss.item()
+    return 0.0 if val != val else val  # NaN → 0.0 for sequences too short to mask
 
 
 def compute_anomaly_scores_batch(
@@ -159,9 +160,8 @@ def compute_anomaly_scores_batch(
                     logits[j], labels[j], reduction="mean", ignore_index=-100
                 )
                 val = loss.item()
-                if val != val:  # NaN check — happens when no tokens were masked
-                    # Fall back to single-sequence scorer with its own seed
-                    val = compute_anomaly_score(model, tokenizer, valid[j], mlm_prob)
+                if val != val:  # NaN check — happens when sequence is too short to mask
+                    val = 0.0   # treat as normal — not enough tokens to score
                 scores.append(val)
     return scores
 
