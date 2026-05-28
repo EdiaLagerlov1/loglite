@@ -1,6 +1,6 @@
 # src/data/load_dataset.py
-import ast
 import csv
+import re
 from pathlib import Path
 from config.settings import HDFS_TRAIN_SESSIONS, BGL_TRAIN_LINES
 from src.data.preprocess import build_hdfs_sessions, hdfs_session_to_sequence
@@ -36,7 +36,7 @@ def load_hdfs_events(
     sequences = []
     for bid, feat in zip(block_ids, features):
         # Features column: "[E5,E22,E11,...]" — parse to list then join with spaces
-        events = ast.literal_eval(feat)
+        events = re.findall(r'E\d+', feat)
         seq = " ".join(events)
         sequences.append((seq, bid))
 
