@@ -158,7 +158,11 @@ def compute_anomaly_scores_batch(
                 loss = F.cross_entropy(
                     logits[j], labels[j], reduction="mean", ignore_index=-100
                 )
-                scores.append(loss.item())
+                val = loss.item()
+                if val != val:  # NaN check — happens when no tokens were masked
+                    # Fall back to single-sequence scorer with its own seed
+                    val = compute_anomaly_score(model, tokenizer, valid[j], mlm_prob)
+                scores.append(val)
     return scores
 
 
